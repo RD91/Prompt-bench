@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Bench · LLM playground</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#d4af37;--gold2:#f0d98a;--ink:#f4ecd8;--mute:#a9a3c8;--line:rgba(212,175,55,.24);--field:rgba(6,9,32,.62);--bubble:rgba(22,29,84,.88);--panel:rgba(13,18,54,.86);--code:#060920;--code-ink:#f1e8c9;--ok:#5fd6a8;--bad:#ff7d92;--accent2:#c9506f}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:15px/1.55 'Jost',system-ui,sans-serif;color:var(--ink);background:radial-gradient(80% 60% at 50% -10%,#272e78 0,transparent 62%),radial-gradient(60% 50% at 100% 100%,#43122f 0,transparent 62%),#090d29;background-attachment:fixed}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(45deg,rgba(212,175,55,.035) 0 1px,transparent 1px 28px),repeating-linear-gradient(-45deg,rgba(212,175,55,.035) 0 1px,transparent 1px 28px)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+code,pre,.num{font-family:'DM Mono',ui-monospace,monospace}
+.glass{position:relative;background:var(--panel);border:1px solid var(--line);box-shadow:0 24px 50px -24px #000,inset 0 0 0 1px rgba(255,255,255,.025)}
+.app{position:relative;display:grid;grid-template-columns:300px minmax(0,1fr) 320px;grid-template-rows:auto minmax(0,1fr);height:100%;gap:14px;padding:14px}
+header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:10px 18px;border-radius:12px}
+.logo{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:#1a1230;background:linear-gradient(135deg,#f6e6a3,#c99a2a)}
+header h1{font:700 22px/1 'Cinzel',serif;margin:0;letter-spacing:.1em;background:linear-gradient(180deg,#f8e9ae,#c99a2a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.status{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}.dot.live{background:var(--ok);box-shadow:0 0 0 4px rgba(95,214,168,.18)}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:transparent;color:var(--gold2);border-radius:8px;padding:7px 15px;cursor:pointer;font:600 12px 'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--gold);background:rgba(212,175,55,.1)}
+.btn.primary{background:linear-gradient(180deg,#f3dc8e,#c99a2a);color:#1a1230;border-color:#e8c766}
+.btn.primary:hover{background:linear-gradient(180deg,#f8e7a8,#d6a82e)}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:4px 11px;font-size:11px}
+aside{overflow:auto;padding:20px;border-radius:12px;min-height:0}
+aside h2{font:600 13px/1.2 'Cinzel',serif;margin:26px 0 10px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;padding-bottom:7px;border-bottom:1px solid var(--line)}
+aside h2:first-child{margin-top:0}
+label{display:block;font-weight:500;font-size:13px;margin:13px 0 5px;color:var(--gold2)}
+.hint{font-size:12px;color:var(--mute);margin:4px 0 0}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;border:1px solid var(--line);background:var(--field);border-radius:8px;padding:9px 12px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.16)}
+select option{background:#0d1236}
+textarea{resize:vertical}
+.row{display:flex;align-items:center;gap:10px}
+.row .num{width:44px;text-align:right;font-size:13px;color:var(--gold2)}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:9px;background:linear-gradient(90deg,#7c6420,#f0d98a)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#f3dc8e;border:3px solid #1a1230;box-shadow:0 0 0 1px var(--gold);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#f3dc8e;border:3px solid #1a1230;cursor:pointer}
+.tog{display:flex;align-items:center;gap:10px;margin:11px 0 0;font-weight:500;font-size:13px;cursor:pointer;color:var(--ink)}
+.tog input{-webkit-appearance:none;appearance:none;width:38px;height:22px;border-radius:99px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;flex:none;margin:0;transition:background .2s}
+.tog input::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#ede4cb;transition:transform .2s}
+.tog input:checked{background:linear-gradient(180deg,#f3dc8e,#c99a2a)}.tog input:checked::after{transform:translateX(16px);background:#1a1230}
+main{display:flex;flex-direction:column;min-height:0;min-width:0;border-radius:12px;overflow:hidden}
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding:16px 20px 0}
+.chip{border:1px solid var(--line);background:transparent;color:var(--gold2);border-radius:99px;padding:4px 14px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.chip:hover{background:rgba(212,175,55,.14);border-color:var(--gold)}
+#log{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.empty{margin:auto;max-width:420px;text-align:center;color:var(--mute)}
+.empty .spark{font-size:40px;color:var(--gold);margin-bottom:4px}
+.empty b{display:block;font:600 26px/1.2 'Cinzel',serif;color:var(--gold2);letter-spacing:.06em;margin-bottom:10px}
+.msg{max-width:min(740px,92%);border:1px solid var(--line);border-radius:10px;padding:12px 16px;background:var(--bubble);overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,#5a1738,#38102f);border-color:rgba(212,175,55,.5)}
+.msg .who{font:600 11px 'Cinzel',serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+.msg .tools{margin-left:auto;display:none}.msg:hover .tools{display:flex}
+.msg.err{border-color:var(--bad);color:var(--bad)}
+.think{font-size:13px;color:var(--mute);border-left:2px solid var(--gold);padding:3px 12px;margin:6px 0;white-space:pre-wrap}
+.body p{margin:.4em 0}.body ul{margin:.4em 0;padding-left:20px}
+.body pre{background:var(--code);color:var(--code-ink);padding:12px 14px;border-radius:8px;overflow:auto;font-size:13px;border:1px solid var(--line)}
+.body code{background:rgba(212,175,55,.14);padding:1px 6px;border-radius:5px;font-size:13px}.body pre code{background:none;padding:0}
+.cursor::after{content:'◆';color:var(--gold);font-size:10px;margin-left:5px;animation:bl 1s ease-in-out infinite}
+@keyframes bl{50%{opacity:.2}}
+@media(prefers-reduced-motion:reduce){.cursor::after{animation:none}}
+.composer{padding:14px 20px 18px;border-top:1px solid var(--line)}
+.composer .box{border:1px solid var(--line);background:var(--field);border-radius:10px;padding:10px 12px}
+.composer .box:focus-within{border-color:var(--gold)}
+.composer textarea{border:0;background:none;box-shadow:none!important;min-height:60px;max-height:200px;padding:4px 6px}
+.composer .row{margin-top:4px}
+.kbd{font-size:12px;color:var(--mute)}
+.badge{display:inline-block;padding:3px 14px;border:1px solid var(--gold);border-radius:99px;font:600 11px 'Cinzel',serif;letter-spacing:.1em;color:var(--gold2)}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px}
+.stat{border-radius:8px;padding:10px 6px;background:var(--field);border:1px solid var(--line);text-align:center}
+.stat b{display:block;font-size:19px;font-weight:500;color:var(--gold2)}.stat span{font-size:11px;color:var(--mute);line-height:1.2;display:block;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}td{padding:6px 0;border-bottom:1px solid var(--line)}td:last-child{text-align:right;color:var(--gold2)}
+.bar{height:6px;background:rgba(255,255,255,.1);border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a6b1e,#f0d98a);transition:width .4s}
+.tabs{display:flex;gap:4px;margin:8px 0}
+.tabs button{border:1px solid var(--line);background:none;padding:4px 13px;border-radius:6px;cursor:pointer;color:var(--mute);font-weight:500;font-size:13px}
+.tabs button[aria-selected=true]{background:linear-gradient(180deg,#f3dc8e,#c99a2a);color:#1a1230;border-color:#e8c766}
+pre.snip{background:var(--code);color:var(--code-ink);padding:12px;border-radius:8px;border:1px solid var(--line);font-size:12px;overflow:auto;max-height:260px;white-space:pre-wrap;word-break:break-all;margin:0}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:linear-gradient(180deg,#f3dc8e,#c99a2a);color:#1a1230;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s}.toast.show{opacity:1;transform:translateX(-50%)}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:rgba(212,175,55,.3);border-radius:9px;border:3px solid transparent;background-clip:content-box}
+@media(max-width:1100px){html,body{height:auto}.app{grid-template-columns:1fr;grid-template-rows:auto;height:auto}main{min-height:78vh}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<header class="glass">
+  <span class="logo" aria-hidden="true">♛</span><h1>Prompt Bench</h1>
+  <span class="status"><i class="dot" id="dot"></i><span id="statusTxt">No key yet</span></span>
+  <span class="sp"></span>
+  <button class="btn sm" id="exportBtn">Export chat</button>
+</header>
+
+<aside class="left glass" aria-label="Settings">
+  <h2>Connection</h2>
+  <label for="key">Groq API key</label>
+  <input type="password" id="key" placeholder="gsk_..." autocomplete="off">
+  <label class="tog"><input type="checkbox" id="remember"> Remember key in this tab</label>
+  <div class="row" style="margin-top:8px"><button class="btn sm" id="clearKey">Clear key</button><button class="btn sm" id="loadModels">Load models</button></div>
+  <p class="hint">Your key stays in this browser and is sent only to api.groq.com.</p>
+
+  <h2>Model</h2>
+  <select id="model" aria-label="Model"></select>
+
+  <h2>System prompt</h2>
+  <textarea id="system" rows="4" placeholder="You are a concise assistant…"></textarea>
+
+  <h2>Sampling</h2>
+  <label for="temp">Temperature</label>
+  <div class="row"><input type="range" id="temp" min="0" max="2" step="0.05" value="0.7"><span class="num" id="tempV">0.7</span></div>
+  <label for="topp">Top P</label>
+  <div class="row"><input type="range" id="topp" min="0" max="1" step="0.05" value="1"><span class="num" id="toppV">1</span></div>
+  <label for="max">Max tokens</label>
+  <input type="number" id="max" value="1024" min="16" max="32768">
+  <p class="hint">On reasoning models this budget includes thinking tokens. Too low = thinking, no answer.</p>
+  <label for="seed">Seed (optional)</label>
+  <input type="number" id="seed" placeholder="random">
+  <label for="stop">Stop sequences</label>
+  <input type="text" id="stop" placeholder="END, ###">
+  <p class="hint">Comma separated, at most 4.</p>
+
+  <h2>Features</h2>
+  <label class="tog"><input type="checkbox" id="stream" checked> Stream the reply</label>
+  <label class="tog"><input type="checkbox" id="json"> JSON mode</label>
+  <p class="hint">Your prompt must mention “JSON”, or the API rejects it.</p>
+  <label class="tog"><input type="checkbox" id="web"> Web search</label>
+  <p class="hint">Only on models that support it (gpt-oss). Costs extra tokens and seconds.</p>
+  <label for="reason">Reasoning effort</label>
+  <select id="reason"><option value="">Off / model default</option><option>low</option><option>medium</option><option>high</option></select>
+  <p class="hint">Thinking tokens are billed and count toward your per-minute quota.</p>
+  <div class="row" style="margin-top:14px"><button class="btn danger" id="reset">Reset conversation</button></div>
+</aside>
+
+<main class="glass">
+  <div class="chips" id="presets" aria-label="Prompt presets"></div>
+  <div id="log" aria-live="polite"></div>
+  <div class="composer">
+    <div class="box"><textarea id="prompt" placeholder="Ask anything, or try a preset above…"></textarea>
+    <div class="row">
+      <span class="kbd">Ctrl/Cmd+Enter to send · Esc to stop</span><span class="sp"></span>
+      <button class="btn" id="regen">Regenerate</button>
+      <button class="btn danger" id="stop-btn" disabled>Stop</button>
+      <button class="btn primary" id="send">Send</button>
+    </div></div>
+  </div>
+</main>
+
+<aside class="right glass" aria-label="Analysis">
+  <h2>Prompt analysis</h2>
+  <span class="badge" id="shot">ZERO-SHOT</span>
+  <p class="hint" id="shotWhy">Add worked examples to move to few-shot.</p>
+
+  <h2>Speed · last reply</h2>
+  <div class="stats">
+    <div class="stat"><b class="num" id="sTtft">–</b><span>ms to first token</span></div>
+    <div class="stat"><b class="num" id="sTot">–</b><span>seconds total</span></div>
+    <div class="stat"><b class="num" id="sTps">–</b><span>tokens / sec</span></div>
+  </div>
+
+  <h2>Token usage</h2>
+  <table>
+    <tr><td>Input</td><td class="num" id="uIn">–</td></tr>
+    <tr><td>Reasoning</td><td class="num" id="uRe">–</td></tr>
+    <tr><td>Output</td><td class="num" id="uOut">–</td></tr>
+    <tr><td><b>Total</b></td><td class="num" id="uTot"><b>–</b></td></tr>
+    <tr><td>Session total</td><td class="num" id="uSes">0</td></tr>
+    <tr><td>Left this minute</td><td class="num" id="uLeft">–</td></tr>
+  </table>
+  <div class="bar" title="Share of per-minute token quota left"><i id="quota"></i></div>
+  <p class="hint">Every turn re-sends the whole conversation, so input grows each time.</p>
+
+  <h2>Context fill</h2>
+  <div class="bar"><i id="ctx"></i></div>
+  <p class="hint" id="ctxTxt">Rough estimate of the conversation size.</p>
+
+  <h2>Code</h2>
+  <div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-t="curl">curl</button><button role="tab" aria-selected="false" data-t="py">Python</button><button role="tab" aria-selected="false" data-t="js">JavaScript</button></div>
+  <pre class="snip" id="snip"></pre>
+  <div class="row" style="margin-top:8px"><button class="btn sm" id="copySnip">Copy</button></div>
+  <p class="hint">Built from your current settings. The key is never printed — set GROQ_API_KEY first.</p>
+</aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API='https://api.groq.com/openai/v1';
+const FALLBACK=['llama-3.3-70b-versatile','llama-3.1-8b-instant','openai/gpt-oss-120b','openai/gpt-oss-20b','qwen/qwen3-32b'];
+const PRESETS=[
+ {n:'Explain simply',s:'You explain things to a curious 12-year-old. Use one analogy.',p:'Explain how a transformer language model predicts the next word.'},
+ {n:'Few-shot sentiment',s:'',p:'Classify sentiment.\nReview: "Loved it" -> positive\nReview: "Total waste of money" -> negative\nReview: "Arrived late but works fine" ->'},
+ {n:'JSON extractor',s:'Reply with JSON only.',p:'Return JSON with keys name, city, age from: "Priya, 24, lives in Pune."',json:true},
+ {n:'Code review',s:'You are a strict senior reviewer. List bugs first, then style nits.',p:'Review:\n```python\ndef avg(xs):\n    return sum(xs)/len(xs)\n```'},
+ {n:'Translate',s:'Translate to Hindi, keep tone casual.',p:'Hey, are you free to catch up this weekend?'}
+];
+let history=[],aborter=null,session=0,tab='curl',lastRL=null;
+
+/* ---------- persistence & theme ---------- */
+const store=sessionStorage;
+$('key').value=store.getItem('pb_key')||'';$('remember').checked=!!store.getItem('pb_key');
+
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1600)}
+function syncKey(){const k=$('key').value.trim();
+  if($('remember').checked&&k)store.setItem('pb_key',k);else store.removeItem('pb_key');
+  $('dot').classList.toggle('live',!!k);$('statusTxt').textContent=k?'Live — real API calls':'No key yet';}
+$('key').oninput=$('remember').onchange=()=>{syncKey();snippet()};
+$('clearKey').onclick=()=>{$('key').value='';$('remember').checked=false;syncKey();snippet()};
+
+/* ---------- models ---------- */
+function fillModels(list){const cur=$('model').value;$('model').innerHTML=list.map(m=>`<option>${m}</option>`).join('');if(list.includes(cur))$('model').value=cur;snippet()}
+async function loadModels(){const k=$('key').value.trim();if(!k)return toast('Add your API key first');
+  try{const r=await fetch(API+'/models',{headers:{Authorization:'Bearer '+k}});if(!r.ok)throw 0;
+    const d=await r.json();const ids=d.data.map(m=>m.id).filter(id=>!/whisper|guard|tts|playai|orpheus/i.test(id)).sort();fillModels(ids);toast(ids.length+' models loaded')}
+  catch{toast('Could not load models — check the key')}}
+$('loadModels').onclick=loadModels;fillModels(FALLBACK);
+
+/* ---------- sliders ---------- */
+for(const [s,v] of [['temp','tempV'],['topp','toppV']])$(s).oninput=()=>{$(v).textContent=$(s).value;snippet()};
+['max','seed','stop','system','model','stream','json','web','reason'].forEach(id=>$(id).addEventListener('input',snippet));
+$('prompt').addEventListener('input',()=>{analyze();snippet()});
+
+/* ---------- presets ---------- */
+$('presets').innerHTML=PRESETS.map((p,i)=>`<button class="chip" data-i="${i}">${p.n}</button>`).join('');
+$('presets').onclick=e=>{const i=e.target.dataset.i;if(i==null)return;const p=PRESETS[i];
+  $('system').value=p.s;$('prompt').value=p.p;$('json').checked=!!p.json;analyze();snippet();$('prompt').focus()};
+
+/* ---------- prompt analysis ---------- */
+function analyze(){
+  const t=[...history.filter(m=>m.role!=='system').map(m=>m.content),$('prompt').value,$('system').value].join('\n');
+  const rules=[/^\s*(example|ex)\s*\d*\s*[:.]/gim,/^\s*(input|q|question)\s*[:.].*\n\s*(output|a|answer)\s*[:.]/gim,/->|→|=>/g,/^\s*(user|assistant)\s*:/gim];
+  const n=Math.max(...rules.map(r=>(t.match(r)||[]).length));
+  const arrows=(t.match(/->|→|=>/g)||[]).length;const c=Math.max(n,arrows>1?arrows-1:0);
+  $('shot').textContent=c===0?'ZERO-SHOT':c===1?'ONE-SHOT':'FEW-SHOT ('+c+')';
+  $('shotWhy').textContent=c===0?'No worked examples detected. Add a few input→output pairs to steer format.':'Detected '+c+' example(s). Count = largest from any single rule (rules overlap, never added).';
+}
+const est=s=>Math.ceil(s.length/4);
+function ctx(){const tot=history.reduce((a,m)=>a+est(m.content),est($('system').value));
+  const pct=Math.min(100,tot/131072*100);$('ctx').style.width=pct+'%';$('ctxTxt').textContent='≈ '+tot+' tokens of a 128k window';}
+
+/* ---------- request building ---------- */
+function build(msgs){
+  const m=[];if($('system').value.trim())m.push({role:'system',content:$('system').value.trim()});
+  const b={model:$('model').value,messages:m.concat(msgs),temperature:+$('temp').value,top_p:+$('topp').value,max_completion_tokens:+$('max').value||1024,stream:$('stream').checked};
+  const stop=$('stop').value.split(',').map(s=>s.trim()).filter(Boolean).slice(0,4);if(stop.length)b.stop=stop;
+  if($('seed').value!=='')b.seed=+$('seed').value;
+  if($('json').checked)b.response_format={type:'json_object'};
+  if($('reason').value){b.reasoning_effort=$('reason').value;}
+  if($('web').checked&&/gpt-oss/.test(b.model))b.tools=[{type:'browser_search'}];
+  if(b.stream)b.stream_options={include_usage:true};
+  return b}
+function snippet(){
+  const msgs=history.concat($('prompt').value.trim()?[{role:'user',content:$('prompt').value.trim()}]:[]);
+  const b=build(msgs.length?msgs:[{role:'user',content:'Hello'}]);const j=JSON.stringify(b,null,2);
+  let s;
+  if(tab==='curl')s=`curl ${API}/chat/completions \\\n  -H "Authorization: Bearer $GROQ_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${j.replace(/'/g,"'\\''")}'`;
+  else if(tab==='py'){const {messages,...rest}=b;delete rest.stream_options;s=`from openai import OpenAI\nimport os\nclient = OpenAI(base_url="${API}", api_key=os.environ["GROQ_API_KEY"])\nr = client.chat.completions.create(\n    messages=${JSON.stringify(messages,null,4).replace(/\n/g,'\n    ')},\n${Object.entries(rest).map(([k,v])=>`    ${k}=${JSON.stringify(v).replace(/true/g,'True').replace(/false/g,'False').replace(/null/g,'None')},`).join('\n')}\n)\nprint(r.choices[0].message.content)`}
+  else s=`const r = await fetch("${API}/chat/completions", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer " + process.env.GROQ_API_KEY,\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify(${j.replace(/\n/g,'\n  ')})\n});\nconsole.log((await r.json()).choices[0].message.content);`;
+  $('snip').textContent=s}
+document.querySelector('.tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));snippet()};
+$('copySnip').onclick=()=>navigator.clipboard.writeText($('snip').textContent).then(()=>toast('Copied'));
+
+/* ---------- rendering ---------- */
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function md(s){const parts=s.split(/```/);return parts.map((p,i)=>{
+  if(i%2){const nl=p.indexOf('\n');return `<pre><code>${esc(nl>=0?p.slice(nl+1):p)}</code></pre>`}
+  return esc(p).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/^[-*] (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`).split(/\n{2,}/).map(x=>x.startsWith('<ul')?x:`<p>${x.replace(/\n/g,'<br>')}</p>`).join('')}).join('')}
+function addMsg(role,text=''){
+  $('log').querySelector('.empty')?.remove();
+  const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'');
+  d.innerHTML=`<div class="who">${role==='user'?'You':esc($('model').value)}<span class="tools"><button class="btn sm cp">Copy</button></span></div><div class="think" hidden></div><div class="body"></div>`;
+  d.querySelector('.body').innerHTML=md(text);
+  d.querySelector('.cp').onclick=()=>navigator.clipboard.writeText(d.querySelector('.body').innerText).then(()=>toast('Copied'));
+  $('log').appendChild(d);$('log').scrollTop=1e9;return d}
+function emptyState(){$('log').innerHTML='<div class="empty"><div class="spark">♛</div><b>Present your prompt</b>Choose a preset above or write your own. The panel on the right shows what every reply costs.</div>'}
+emptyState();
+
+/* ---------- send ---------- */
+function setBusy(b){$('send').disabled=b;$('regen').disabled=b;$('stop-btn').disabled=!b}
+async function run(){
+  const key=$('key').value.trim();if(!key)return toast('Add your Groq API key first');
+  const body=build(history);const node=addMsg('assistant');const bodyEl=node.querySelector('.body'),think=node.querySelector('.think');
+  bodyEl.classList.add('cursor');setBusy(true);$('statusTxt').textContent='Thinking…';aborter=new AbortController();
+  const t0=performance.now();let tFirst=null,text='',reasoning='',usage=null;
+  try{
+    const r=await fetch(API+'/chat/completions',{method:'POST',signal:aborter.signal,headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const rem=r.headers.get('x-ratelimit-remaining-tokens'),lim=r.headers.get('x-ratelimit-limit-tokens');
+    if(rem){$('uLeft').textContent=(+rem).toLocaleString();if(lim)$('quota').style.width=(+rem/+lim*100)+'%'}
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error((e.error&&e.error.message)||('HTTP '+r.status))}
+    const paint=()=>{bodyEl.innerHTML=md(text);if(reasoning){think.hidden=false;think.textContent=reasoning}$('log').scrollTop=1e9};
+    if(!body.stream){const d=await r.json();const m=d.choices[0].message;tFirst=performance.now();text=m.content||'';reasoning=m.reasoning||'';usage=d.usage;paint()}
+    else{const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+      for(;;){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();
+        for(const l of lines){if(!l.startsWith('data:'))continue;const p=l.slice(5).trim();if(p==='[DONE]')continue;
+          let j;try{j=JSON.parse(p)}catch{continue}
+          const dl=j.choices&&j.choices[0]&&j.choices[0].delta;
+          if(dl){if(dl.reasoning)reasoning+=dl.reasoning;if(dl.content){if(tFirst==null){tFirst=performance.now();$('statusTxt').textContent='Streaming…'}text+=dl.content}}
+          if(j.usage)usage=j.usage;else if(j.x_groq&&j.x_groq.usage)usage=j.x_groq.usage;
+          paint()}}}
+    const t1=performance.now();
+    history.push({role:'assistant',content:text});
+    const outTok=usage?usage.completion_tokens:est(text+reasoning);
+    $('sTtft').textContent=Math.round((tFirst||t1)-t0);$('sTot').textContent=((t1-t0)/1000).toFixed(2);$('sTps').textContent=Math.round(outTok/Math.max((t1-(tFirst||t0))/1000,.05));
+    if(usage){const re=(usage.completion_tokens_details&&usage.completion_tokens_details.reasoning_tokens)||0;
+      $('uIn').textContent=usage.prompt_tokens;$('uRe').textContent=re;$('uOut').textContent=usage.completion_tokens-re;$('uTot').textContent=usage.total_tokens;session+=usage.total_tokens;$('uSes').textContent=session.toLocaleString()}
+    if(!text&&reasoning)toast('Only thinking came back — raise Max tokens');
+  }catch(e){
+    if(e.name==='AbortError'){history.push({role:'assistant',content:text});toast('Stopped')}
+    else{node.classList.add('err');bodyEl.textContent=e.message}
+  }finally{bodyEl.classList.remove('cursor');setBusy(false);aborter=null;syncKey();ctx();analyze();snippet()}
+}
+$('send').onclick=()=>{const v=$('prompt').value.trim();if(!v)return;history.push({role:'user',content:v});addMsg('user',v);$('prompt').value='';run()};
+$('regen').onclick=()=>{if(!history.length)return;while(history.length&&history[history.length-1].role==='assistant'){history.pop();$('log').lastElementChild.remove()}
+  if(history.length)run()};
+$('stop-btn').onclick=()=>aborter&&aborter.abort();
+$('reset').onclick=()=>{history=[];session=0;$('uSes').textContent='0';emptyState();ctx();analyze();snippet()};
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('send').click()}if(e.key==='Escape'&&aborter)aborter.abort()});
+$('exportBtn').onclick=()=>{if(!history.length)return toast('Nothing to export yet');
+  const md='# Prompt Bench session\n\nModel: '+$('model').value+'\n\n'+history.map(m=>`**${m.role==='user'?'You':'Assistant'}:**\n\n${m.content}`).join('\n\n---\n\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='prompt-bench-session.md';a.click()};
+syncKey();analyze();snippet();ctx();if($('key').value)loadModels();
+</script>
+</body>
+</html>
